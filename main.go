@@ -1,13 +1,12 @@
 package main
 
 import (
-  "es-archivist/config"
-  "es-archivist/essnap"
   "fmt"
+  "es-archivist/config"
 )
 
 func main() {
-  myConfig := config.New("config.json")
+  myConfig := Config.New("config.json")
 
   fmt.Println("Got config, ES Host is: " + myConfig.ESHost)
 

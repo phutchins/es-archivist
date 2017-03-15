@@ -1,11 +1,11 @@
-package essnap
+package main
 
 import (
   "net/http"
-  "es-archivist/config"
   "encoding/json"
   "fmt"
   "log"
+  "es-archivist/config"
 )
 
 type IndexItem struct {
