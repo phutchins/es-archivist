@@ -6,12 +6,12 @@ import (
 )
 
 func main() {
-  myConfig := Config.New("config.json")
+  myConfig := config.New("config.json")
 
   fmt.Println("Got config, ES Host is: " + myConfig.ESHost)
 
   // Get the list of all indices
-  indexList := essnap.GetIndicesList()
+  indexList := GetIndicesList()
 
   fmt.Println("First element: " + indexList[0].Health)
 
@@ -21,7 +21,7 @@ func main() {
   fmt.Println("Index array: ", indexArray)
 }
 
-func getIndexArray(il []essnap.IndexItem) []string {
+func getIndexArray(il []IndexItem) []string {
   var indexArray []string
 
   for _,element := range il {

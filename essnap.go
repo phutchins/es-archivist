@@ -3,9 +3,9 @@ package main
 import (
   "net/http"
   "encoding/json"
+  "es-archivist/config"
   "fmt"
   "log"
-  "es-archivist/config"
 )
 
 type IndexItem struct {
