@@ -12,6 +12,7 @@ import (
 type Config struct {
   ESHost string
   MinStorageBytes int
+  SleepSeconds int
 }
 
 func New(c string) Config {
@@ -25,7 +26,7 @@ func New(c string) Config {
     fmt.Println("error decoding config file: ", err)
   }
 
-  fmt.Println(config.ESHost)
+  //fmt.Println(config.ESHost)
 
   return config
 }

@@ -1,4 +1,5 @@
 {
   "ESHost": "localhost:9200",
-  "MinStorageBytes": 109951162777
+  "MinStorageBytes": 109951162777,
+  "SleepSeconds": 5
 }

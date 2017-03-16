@@ -4,6 +4,7 @@ import (
   "fmt"
 //  "encoding/json"
   "time"
+  "es-archivist/config"
 )
 
 type NodesFSData struct {
@@ -12,27 +13,16 @@ type NodesFSData struct {
 }
 
 func main() {
-  //myConfig := config.New("config.json")
-
-  //fmt.Println("Got config, ES Host is: " + myConfig.ESHost)
-
-  // Get the list of all indices
-  //indexList := GetIndicesList()
-  //fmt.Println("First element: " + indexList[0].Health)
-
-  // Create a date ordered array of indices
-  //indexArray := getIndexArray(indexList)
-  //fmt.Println("Index array: ", indexArray)
-
+  myConfig := config.New("config.json")
 
   // Watch the storage space left on each of the nodes
-  watchStorageSpace()
+  watchStorageSpace(myConfig)
 }
 
-func watchStorageSpace() {
+func watchStorageSpace(myConf config.Config) {
   for {
-    nodeStats := GetNodeStats()
     // Get current node stats
+    nodeStats := GetNodeStats()
 
     //out, _ := json.Marshal(nodeStats)
     //fmt.Printf("nodeStats: %v", string(out))
@@ -46,13 +36,19 @@ func watchStorageSpace() {
       fsData.Totals = element.FS.Total
 
       //data, _ := json.Marshal(element.FS.Total)
-
       //fmt.Printf("Adding %+v to data\n", string(data))
+
       nodeFSDataArray = append(nodeFSDataArray, fsData)
     }
 
+
+    // Log the current storage space used and free for each node in the cluster
     for _, node := range nodeFSDataArray {
-      fmt.Printf("Node '%s' has %v free space left out of %v\n", node.Name, node.Totals.FreeInBytes, node.Totals.TotalInBytes)
+      // Calculate the percentage of storage space used
+      percent := float64(node.Totals.FreeInBytes) / float64(node.Totals.TotalInBytes) * float64(100)
+      ipct := int(percent / float64(1))
+
+      fmt.Printf("[%%%v]Node '%s' has %v free space left out of %v\n", ipct, node.Name, node.Totals.FreeInBytes, node.Totals.TotalInBytes)
     }
 
     // If storage space drops below specified level, kick off a snapshot
@@ -75,8 +71,8 @@ func watchStorageSpace() {
     // Wait some period of time for the disk usage to stabalize
     // Then continue to watch disk usage
 
-    fmt.Println("Sleeping...")
-    time.Sleep(5000 * time.Millisecond)
+    //fmt.Println("Sleeping...")
+    time.Sleep(time.Duration(myConf.SleepSeconds) * time.Second)
   }
 }
 
