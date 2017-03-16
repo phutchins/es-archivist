@@ -1,10 +1,11 @@
 package main
 
 import (
+  "es-archivist/config"
   "fmt"
 //  "encoding/json"
+  "sort"
   "time"
-  "es-archivist/config"
 )
 
 type NodesFSData struct {
@@ -81,7 +82,7 @@ func snapshotOldestIndex() string {
   return "stub no error"
 }
 
-func getIndexArray(il []IndexItem) []string {
+func GetIndexArray(il []IndexItem) []string {
   var indexArray []string
 
   for _,element := range il {
@@ -90,7 +91,8 @@ func getIndexArray(il []IndexItem) []string {
   return indexArray
 }
 
-func sortIndexArray(ia []string) []string {
-  var sortedArray []string
-  return sortedArray
+func SortIndexArray(ia []string) []string {
+  sort.Strings(ia)
+
+  return ia
 }
