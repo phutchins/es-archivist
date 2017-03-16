@@ -48,7 +48,7 @@ func watchStorageSpace(myConf config.Config) {
       percent := float64(node.Totals.FreeInBytes) / float64(node.Totals.TotalInBytes) * float64(100)
       ipct := int(percent / float64(1))
 
-      fmt.Printf("[%%%v]Node '%s' has %v free space left out of %v\n", ipct, node.Name, node.Totals.FreeInBytes, node.Totals.TotalInBytes)
+      fmt.Printf("[%%%v] Node '%s' has %v free space left out of %v\n", ipct, node.Name, node.Totals.FreeInBytes, node.Totals.TotalInBytes)
     }
 
     // If storage space drops below specified level, kick off a snapshot
