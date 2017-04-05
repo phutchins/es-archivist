@@ -13,6 +13,8 @@ type Config struct {
   ESHost string
   MinStorageBytes int
   SleepSeconds int
+  MinFreeSpacePercent float64
+  SnapshotRepositoryName string
 }
 
 func New(c string) Config {

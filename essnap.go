@@ -1,9 +1,11 @@
 package main
 
 import (
+  "bytes"
   "net/http"
   "encoding/json"
   "es-archivist/config"
+  "io/ioutil"
   "fmt"
   "log"
 )
@@ -63,7 +65,7 @@ type ApiResponse struct {
 
 // Add a decode method on the struct that returns json given a new struct
 
-func GetIndicesList() []IndexItem {
+func GetIndexList() []IndexItem {
   indexList := []IndexItem{}
 
   myConfig := config.New("config.json")
@@ -127,4 +129,47 @@ func GetNodeStats() NodeStats {
   }
 
   return nodeStats
+}
+
+func TakeSnapshot(indexName string) string {
+  myConfig := config.New("config.json")
+
+  protocol := "http://"
+  httpPath := "/_snapshot/" + myConfig.SnapshotRepositoryName + "/" + indexName
+  jsonArgs := []byte(`{"indices": "` + indexName + `", "ignore_unavailable": true, "include_global_state": false}`)
+
+  requestURI := protocol + myConfig.ESHost + httpPath
+
+  req, err := http.NewRequest("PUT", requestURI, bytes.NewBuffer(jsonArgs))
+
+  req.Header.Set("Content-Type", "application/json")
+
+  client := &http.Client{}
+  resp, err := client.Do(req)
+
+  if err != nil {
+    panic(err)
+  }
+
+  defer resp.Body.Close()
+
+  fmt.Println("response status: ", resp.Status)
+  fmt.Println("response headers: ", resp.Header)
+
+  body, _ := ioutil.ReadAll(resp.Body)
+
+  fmt.Println("response body: ", string(body))
+
+  result := "fail"
+  // Get the initial response out of the returned body
+  // tmp
+  if resp.Status == "200" {
+    result = "accepted"
+  }
+
+  return result
+}
+
+func GetSnapshotStatus(indexName string) string {
+return "ok"
 }

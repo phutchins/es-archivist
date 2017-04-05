@@ -1,5 +1,7 @@
 {
   "ESHost": "localhost:9200",
   "MinStorageBytes": 109951162777,
-  "SleepSeconds": 5
+  "SleepSeconds": 5,
+  "minFreeSpacePercent": 20,
+  "snapshotRepositoryName": "es-snapshots"
 }
