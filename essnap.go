@@ -5,7 +5,7 @@ import (
   "net/http"
   "encoding/json"
   "es-archivist/config"
-  "io/ioutil"
+  //"io/ioutil"
   "fmt"
   "log"
 )
@@ -61,6 +61,22 @@ type ApiResponse struct {
   Body string
 }
 
+type ESResponse struct {
+  Error ESError `json:"error"`
+  Type string `json:"type"`
+  Reason string `json:"reason"`
+  Status int `json:"status"`
+}
+
+type ESError struct {
+  RootCause []RootCause `json:"root_cause"`
+}
+
+type RootCause struct {
+  Type string `json:"type"`
+  Reason string `json:"reason"`
+}
+
 // Get the response.body from the server and return that in some kind of generic struct
 
 // Add a decode method on the struct that returns json given a new struct
@@ -88,9 +104,6 @@ func GetIndexList() []IndexItem {
 
     if err != nil {
       fmt.Println("Error decoding JSON: ", err)
-    }
-
-    if err != nil {
       log.Fatal(err)
     }
   }
@@ -112,9 +125,13 @@ func GetNodeStats() NodeStats {
   resp, err := http.Get(requestURI)
 
   if err != nil {
-    fmt.Println("Error getting index list: ", err)
+    fmt.Println("Error getting node stats: ", err)
   } else {
     defer resp.Body.Close()
+
+    //body, _ := ioutil.ReadAll(resp.Body)
+    //out2, _ := json.Marshal(resp.Body)
+    //fmt.Println("Response body is: ", string(body))
 
     decoder := json.NewDecoder(resp.Body)
     err := decoder.Decode(&nodeStats)
@@ -124,8 +141,8 @@ func GetNodeStats() NodeStats {
     }
 
     // Example for printing the JSON
-    //out, _ := json.Marshal(nodeStats)
-    //fmt.Println("Out", string(out))
+    out, _ := json.Marshal(nodeStats)
+    fmt.Println("Out", string(out))
   }
 
   return nodeStats
@@ -149,27 +166,46 @@ func TakeSnapshot(indexName string) string {
 
   if err != nil {
     panic(err)
+  } else {
+    defer resp.Body.Close()
+
+    fmt.Println("response status: ", resp.Status)
+    fmt.Println("response headers: ", resp.Header)
+
+    //body, _ := ioutil.ReadAll(resp.Body)
+    //fmt.Println("response body: ", string(body))
+
+    esResponse := ESResponse{}
+    decoder := json.NewDecoder(resp.Body)
+    err := decoder.Decode(&esResponse)
+
+    if err != nil {
+      fmt.Println("Error parsing JSON response body: ", err)
+    } else {
+      esResponseJson, _ := json.Marshal(esResponse)
+      fmt.Println("response body: ", string(esResponseJson))
+
+      //var rootCause RootCause
+      //rootCause = esResponse.root_cause
+
+      fmt.Println("Root Cause: ", esResponse.Error.RootCause[0].Type)
+    }
+
+    result := "unknown"
+    // Get the initial response out of the returned body
+    // tmp
+    if resp.Status == "200" {
+      result = "accepted"
+    } else if resp.Status == "400" {
+      result = "fail"
+    } else {
+      result = "unknown"
+    }
+
+    return result
   }
-
-  defer resp.Body.Close()
-
-  fmt.Println("response status: ", resp.Status)
-  fmt.Println("response headers: ", resp.Header)
-
-  body, _ := ioutil.ReadAll(resp.Body)
-
-  fmt.Println("response body: ", string(body))
-
-  result := "fail"
-  // Get the initial response out of the returned body
-  // tmp
-  if resp.Status == "200" {
-    result = "accepted"
-  }
-
-  return result
 }
 
 func GetSnapshotStatus(indexName string) string {
-return "ok"
+  return "ok"
 }

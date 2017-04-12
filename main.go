@@ -17,10 +17,18 @@ func main() {
   myConfig := config.New("config.json")
 
   // Watch the storage space left on each of the nodes
-  watchStorageSpace(myConfig)
+  // Have watchStorageSpace return some sort of error or message?
+  // loop here?
+  for {
+    err := watchStorageSpace(myConfig)
+    fmt.Printf("Error while watching storage space: %v", err)
+    fmt.Printf("Starting watch again in 5 seconds...")
+
+    time.Sleep(5 * time.Second)
+  }
 }
 
-func watchStorageSpace(myConf config.Config) {
+func watchStorageSpace(myConf config.Config) string {
   var lowestNodeDiskPercent float64
 
   for {
@@ -56,21 +64,42 @@ func watchStorageSpace(myConf config.Config) {
       }
 
       fmt.Printf("[%%%v] Node '%s' has %v free space left out of %v\n", ipct, node.Name, node.Totals.FreeInBytes, node.Totals.TotalInBytes)
+      fmt.Printf("lowestNodeDiskPercent is [%%%v]\n", lowestNodeDiskPercent)
     }
 
     // If storage space drops below specified level, kick off a snapshot
     //   of the oldest index
     if ( lowestNodeDiskPercent < myConf.MinFreeSpacePercent) {
+      fmt.Printf("Free space of %v is less than the configured minimum of %v. Starting oldest index archival\n", lowestNodeDiskPercent, myConf.MinFreeSpacePercent)
+
       indexList := GetIndexList()
+
+      fmt.Printf("indexList is: %v\n", indexList)
+
       indexArray := GetIndexArray(indexList)
+
+      fmt.Printf("indexArray is: %v\n", indexArray)
+
       sortedIndexArray := SortIndexArray(indexArray)
+
+      fmt.Printf("sortedIndexArray is: %v\n", sortedIndexArray)
+
+      if len(sortedIndexArray) == 0 {
+        fmt.Printf("Sorted index list is empty so unable to take snapshot\n")
+        return "Sorted index array is empty :("
+      }
+
       oldestIndexName := sortedIndexArray[0]
 
       // Take a snapshot one (or more) indices at a time
+      fmt.Printf("Oldest index is %v. Taking snapshot.\n", oldestIndexName)
       initialResponse := TakeSnapshot(oldestIndexName)
 
       // If initialResponse is not OK, do something, report the failure?
       if initialResponse != "accepted" {
+        fmt.Printf("Failed to start snapshot. Reason: %v", initialResponse)
+        // Should return here and move this to a method
+        return "Failed to start snapshot"
       }
 
       // Wait for the snapshot(s) to complete
@@ -102,6 +131,7 @@ func GetIndexArray(il []IndexItem) []string {
 
   for _,element := range il {
     indexArray = append(indexArray,element.Index)
+    fmt.Printf("Adding index %v to indexArray\n", element.Index)
   }
   return indexArray
 }

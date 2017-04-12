@@ -3,5 +3,5 @@
   "MinStorageBytes": 109951162777,
   "SleepSeconds": 5,
   "minFreeSpacePercent": 20,
-  "snapshotRepositoryName": "es-snapshots"
+  "snapshotRepositoryName": "snaps"
 }
