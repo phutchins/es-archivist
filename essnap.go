@@ -165,6 +165,7 @@ func TakeSnapshot(indexName string) string {
   resp, err := client.Do(req)
 
   if err != nil {
+    // Return error here instead and retry
     panic(err)
   } else {
     defer resp.Body.Close()
@@ -179,16 +180,17 @@ func TakeSnapshot(indexName string) string {
     decoder := json.NewDecoder(resp.Body)
     err := decoder.Decode(&esResponse)
 
+    var errorString string
+
     if err != nil {
       fmt.Println("Error parsing JSON response body: ", err)
     } else {
       esResponseJson, _ := json.Marshal(esResponse)
       fmt.Println("response body: ", string(esResponseJson))
 
-      //var rootCause RootCause
-      //rootCause = esResponse.root_cause
+      errorString = esResponse.Error.RootCause[0].Type
 
-      fmt.Println("Root Cause: ", esResponse.Error.RootCause[0].Type)
+      fmt.Println("Root Cause: ", errorString)
     }
 
     result := "unknown"
@@ -196,8 +198,13 @@ func TakeSnapshot(indexName string) string {
     // tmp
     if resp.Status == "200" {
       result = "accepted"
-    } else if resp.Status == "400" {
+    } else if errorString == "invalid_snapshot_name_exception" {
       result = "fail"
+      errorMessage := "Snapshot name is already in use"
+      fmt.Println("Fail: ", errorMessage)
+
+      // Should check to see if the snapshot was a success and delete the index if it was
+      // If not, it should retry
     } else {
       result = "unknown"
     }
