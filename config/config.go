@@ -15,6 +15,9 @@ type Config struct {
   SleepSeconds int
   MinFreeSpacePercent float64
   SnapshotRepositoryName string
+  MinIndexCount int
+  SnapDryRun bool
+  IndexDryRun bool
 }
 
 func New(c string) Config {
@@ -48,6 +51,8 @@ func New(c string) Config {
   if config.SleepSeconds == 0 {
     config.SleepSeconds = 5
   }
+
+  // Set defaults for MinIndexCount and DryRun here
 
   //fmt.Println(config.ESHost)
 

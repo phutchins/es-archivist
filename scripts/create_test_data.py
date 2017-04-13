@@ -253,7 +253,7 @@ def generate_test_data():
 
 if __name__ == '__main__':
     tornado.options.define("es_url", type=str, default='http://localhost:9200/', help="URL of your Elasticsearch node")
-    tornado.options.define("index_name", type=str, default='test_data-3', help="Name of the index to store your messages")
+    tornado.options.define("index_name", type=str, default='test_data-1', help="Name of the index to store your messages")
     tornado.options.define("index_type", type=str, default='test_type', help="Type")
     tornado.options.define("batch_size", type=int, default=1000, help="Elasticsearch bulk index batch size")
     tornado.options.define("num_of_shards", type=int, default=2, help="Number of shards for ES index")
