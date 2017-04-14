@@ -18,6 +18,7 @@ type Config struct {
   MinIndexCount int
   SnapDryRun bool
   IndexDryRun bool
+  IndexIncludePrefix []string
 }
 
 func New(c string) Config {

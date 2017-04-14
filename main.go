@@ -2,9 +2,12 @@ package main
 
 import (
   "es-archivist/config"
+  "log"
   "fmt"
 //  "encoding/json"
+  "regexp"
   "sort"
+  "strconv"
   "time"
 )
 
@@ -80,7 +83,15 @@ func watchStorageSpace(myConf config.Config) string {
       var snapshotStatus string
       indexList := GetIndexList()
       indexArray := GetIndexArray(indexList)
-      sortedIndexArray := SortIndexArray(indexArray)
+      filteredIndexArray := Filter(indexArray, ContainsPrefixFilter, myConf.IndexIncludePrefix)
+      sortedIndexArray := SortIndexArray(filteredIndexArray)
+      indexCount := len(indexArray)
+
+      //fmt.Printf("Total index count is %d\n", int(indexCount))
+
+      if indexCount <= myConf.MinIndexCount {
+        return fmt.Sprintf("Current index count of %d is less than MinIndexCount of %d. Not doing anything...\n", indexCount, myConf.MinIndexCount)
+      }
 
       fmt.Printf("Free space of %v is less than the configured minimum of %v.\n",
         lowestNodeDiskPercent,
@@ -208,8 +219,77 @@ func GetIndexArray(il []IndexItem) []string {
   return indexArray
 }
 
+type ByLsTimeStamp []string
+
+func (s ByLsTimeStamp) Len() int {
+  return len(s)
+}
+
+func (s ByLsTimeStamp) Swap(i, j int) {
+  s[i], s[j] = s[j], s[i]
+}
+
+func (s ByLsTimeStamp) Less(i, j int) bool {
+  // Get the date substring
+  rDate, err := regexp.Compile(".*-([0-9]{4}.[0-9]{2}.[0-9]{2})")
+
+  if err != nil {
+    log.Fatal(err)
+  }
+
+  rSep, err := regexp.Compile("[.]")
+
+  if err != nil {
+    log.Fatal(err)
+  }
+
+  //fmt.Printf("s[i]: %v s[j]: %v\n", s[i], s[j])
+  //fmt.Println(rDate.FindStringSubmatch(s[i]))
+
+  iDate := rDate.FindStringSubmatch(s[i])
+  jDate := rDate.FindStringSubmatch(s[j])
+
+  //fmt.Printf("iDate: %s jDate: %s\n", iDate[1], jDate[1])
+
+  // Remove period separator from date so that we can convert to int
+  iDateString := rSep.ReplaceAllString(iDate[1], "")
+  jDateString := rSep.ReplaceAllString(jDate[1], "")
+
+  iDateInt, _ := strconv.Atoi(iDateString)
+  jDateInt, _ := strconv.Atoi(jDateString)
+
+  //fmt.Printf("iDateInt: %d jDateInt: %d\n", iDateInt, jDateInt)
+
+  return iDateInt < jDateInt
+}
+
+func Filter(s []string, fn func(string, []string) bool, pfx []string) []string {
+  var p []string
+  for _, v := range s {
+    if fn(v, pfx) {
+      p = append(p, v)
+    }
+  }
+  return p
+}
+
+func ContainsPrefixFilter(s string, p []string) bool {
+  var containsPrefix bool
+
+  for _, prefix := range p {
+    r, _ := regexp.Compile(".*" + prefix + ".*")
+    match := r.MatchString(s)
+
+    if match == true {
+      containsPrefix = true
+    }
+  }
+
+  return containsPrefix
+}
+
 func SortIndexArray(ia []string) []string {
-  sort.Strings(ia)
+  sort.Sort(ByLsTimeStamp(ia))
 
   return ia
 }

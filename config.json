@@ -4,7 +4,10 @@
   "SleepSeconds": 5,
   "MinFreeSpacePercent": 22,
   "SnapshotRepositoryName": "snaps",
-  "MinIndexCount": 30,
+  "MinIndexCount": 6,
   "SnapDryRun": false,
-  "IndexDryRun": false
+  "IndexDryRun": false,
+  "IndexIncludePrefix": [
+    "logstash"
+  ]
 }
