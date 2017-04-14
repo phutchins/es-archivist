@@ -2,13 +2,14 @@ package main
 
 import (
   "bytes"
-  "net/http"
   "encoding/json"
   "errors"
   "es-archivist/config"
-  //"io/ioutil"
   "fmt"
+  //"io/ioutil"
   "log"
+  "net/http"
+  "regexp"
 )
 
 type IndexItem struct {
@@ -204,6 +205,8 @@ func TakeSnapshot(indexName string) string {
     err := decoder.Decode(&esResponse)
 
     var errorString string
+    var errorReason string
+    var statusCode int
 
     if err != nil {
       fmt.Println("Error parsing JSON response body: ", err)
@@ -214,6 +217,8 @@ func TakeSnapshot(indexName string) string {
         //fmt.Println("response body: ", string(esResponseJson))
 
         errorString = esResponse.Error.RootCause[0].Type
+        errorReason = esResponse.Error.RootCause[0].Reason
+        statusCode = resp.StatusCode
 
         //fmt.Println("Root Cause: ", errorString)
       }
@@ -222,6 +227,13 @@ func TakeSnapshot(indexName string) string {
     result := "unknown"
     // Get the initial response out of the returned body
 
+    rNameAlreadyExists, err := regexp.Compile(".*name already exists.*")
+
+    if err != nil {
+      fmt.Printf("Failed to create regex: %v", err)
+      result = "fail"
+    }
+
     if resp.StatusCode == 200 {
       result = "accepted"
     } else if errorString == "invalid_snapshot_name_exception" {
@@ -229,9 +241,12 @@ func TakeSnapshot(indexName string) string {
       errorMessage := "Snapshot name is already in use"
       fmt.Println("Fail: ", errorMessage)
 
-      // Should check to see if the snapshot was a success and delete the index if it was
-      // If not, it should retry
+    } else if rNameAlreadyExists.MatchString(errorReason) {
+      result = "fail_name_in_use_exception"
+      errorMessage := "Snapshot name is already in use"
+      fmt.Println("Fail: ", errorMessage)
     } else {
+      fmt.Printf("Status code [%v] - Unknown response: %v\n", statusCode, errorString)
       result = "fail"
     }
 

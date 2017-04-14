@@ -13,6 +13,7 @@ type Config struct {
   ESHost string
   MinStorageBytes int
   SleepSeconds int
+  SleepAfterDeleteIndex int
   MinFreeSpacePercent float64
   SnapshotRepositoryName string
   MinIndexCount int

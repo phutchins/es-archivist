@@ -2,9 +2,10 @@
   "ESHost": "localhost:9200",
   "MinStorageBytes": 109951162777,
   "SleepSeconds": 5,
+  "SleepAfterDeleteIndex": 60,
   "MinFreeSpacePercent": 22,
   "SnapshotRepositoryName": "snaps",
-  "MinIndexCount": 6,
+  "MinIndexCount": 4,
   "SnapDryRun": false,
   "IndexDryRun": false,
   "IndexIncludePrefix": [

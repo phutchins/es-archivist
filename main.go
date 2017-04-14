@@ -132,6 +132,8 @@ func watchStorageSpace(myConf config.Config) string {
           // Check if the snapshot was successful
           fmt.Println("Failed to start snapshot: Snapshot name in use")
           moveAlong = true
+        } else {
+          return fmt.Sprintf("Unhandled response from TakeSnapshot: %v\n", initialResponse)
         }
 
         if moveAlong != true {
@@ -199,6 +201,12 @@ func watchStorageSpace(myConf config.Config) string {
 
       if deleteSuccess {
         fmt.Println("Horray! The index was deleted successfully. We're done here.")
+        fmt.Printf("Sleeping for %s seconds to wait for space to be freed up", myConf.SleepAfterDeleteIndex)
+
+        // Possibly expunge deleted indices here
+        // curl -XPOST 'localhost:9200/_optimize?only_expunge_deletes=true'
+
+        time.Sleep(time.Duration(myConf.SleepAfterDeleteIndex) * time.Second)
       }
       // Wait some period of time for the disk usage to stabalize
       // Then continue to watch disk usage
