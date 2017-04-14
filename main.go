@@ -4,6 +4,8 @@ import (
   "es-archivist/config"
   "log"
   "fmt"
+  "io/ioutil"
+  "os"
 //  "encoding/json"
   "regexp"
   "sort"
@@ -18,25 +20,25 @@ type NodesFSData struct {
 
 func main() {
   myConfig := config.New("config.json")
+  sleepAfterMainLoopSeconds := myConfig.SleepAfterMainLoopSeconds
+  InitLogger(ioutil.Discard, os.Stdout, os.Stdout, os.Stderr)
 
   // Watch the storage space left on each of the nodes
   // Have watchStorageSpace return some sort of error or message?
   // loop here?
   for {
     err := watchStorageSpace(myConfig)
-    fmt.Printf("Error while watching storage space: %v\n", err)
-    fmt.Printf("Starting watch again in 5 seconds...\n")
+    Info.Printf("%v\n", err)
 
-    time.Sleep(5 * time.Second)
+    time.Sleep(time.Duration(sleepAfterMainLoopSeconds) * time.Second)
   }
 }
 
 func watchStorageSpace(myConf config.Config) string {
-  var lowestNodeDiskPercent float64
-
   // Main loop to monitor disk usage
   for {
     var nodeFSDataArray []NodesFSData
+    var lowestNodeDiskPercent float64
 
     // Get current node stats
     nodeStats := GetNodeStats()
@@ -57,7 +59,7 @@ func watchStorageSpace(myConf config.Config) string {
     for _, node := range nodeFSDataArray {
       // Calculate the percentage of storage space used
       percent := float64(node.Totals.FreeInBytes) / float64(node.Totals.TotalInBytes) * float64(100)
-      ipct := int(percent / float64(1))
+      //ipct := int(percent / float64(1))
 
       // Set lowestNodeDiskPercent with the percentage of the least disk space free
       if ( lowestNodeDiskPercent == 0 || percent < float64(lowestNodeDiskPercent) ) {
@@ -67,19 +69,20 @@ func watchStorageSpace(myConf config.Config) string {
       // We will probably want to determine the percentage from storage space alotted to
       // es so that we dont' continue deleting indices due to disk usage from some other
       // process or application. We could set this in our config here.
+      /*
       fmt.Printf("[%%%v] Node '%s' has %v free space left out of %v\n",
         ipct,
         node.Name,
         node.Totals.FreeInBytes,
         node.Totals.TotalInBytes,
       )
+      */
       //fmt.Printf("lowestNodeDiskPercent is [%%%v]\n", lowestNodeDiskPercent)
     }
 
     // If storage space drops below specified level, kick off a snapshot
     //   of the oldest index
-    if ( lowestNodeDiskPercent < myConf.MinFreeSpacePercent) {
-      //var initialResponse string
+    if ( lowestNodeDiskPercent < myConf.MinFreeSpacePercent ) {
       var snapshotStatus string
       indexList := GetIndexList()
       indexArray := GetIndexArray(indexList)
@@ -90,7 +93,7 @@ func watchStorageSpace(myConf config.Config) string {
       //fmt.Printf("Total index count is %d\n", int(indexCount))
 
       if indexCount <= myConf.MinIndexCount {
-        return fmt.Sprintf("Current index count of %d is less than MinIndexCount of %d. Not doing anything...\n", indexCount, myConf.MinIndexCount)
+        return fmt.Sprintf("Current index count of %d is less than MinIndexCount of %d. Not doing anything...", indexCount, myConf.MinIndexCount)
       }
 
       fmt.Printf("Free space of %v is less than the configured minimum of %v.\n",
@@ -102,11 +105,10 @@ func watchStorageSpace(myConf config.Config) string {
 
       //fmt.Printf("indexList is: %v\n", indexList)
       //fmt.Printf("indexArray is: %v\n", indexArray)
-      fmt.Printf("sortedIndexArray is: %v\n", sortedIndexArray)
+      //fmt.Printf("sortedIndexArray is: %v\n", sortedIndexArray)
 
       if len(sortedIndexArray) == 0 {
-        fmt.Printf("Sorted index list is empty so unable to take snapshot\n")
-        return "Sorted index array is empty :("
+        return "No indices available to archive."
       }
 
       oldestIndexName := sortedIndexArray[0]
@@ -150,6 +152,9 @@ func watchStorageSpace(myConf config.Config) string {
       for moveAlong != true {
         snapshotStatus = GetSnapshotStatus(oldestIndexName)
         fmt.Println("Snapshot status is: " + snapshotStatus)
+
+
+        // Need to handle INTERNAL_SERVER_ERROR ?
 
         if snapshotStatus == "SUCCESS" {
           moveAlong = true
@@ -201,18 +206,21 @@ func watchStorageSpace(myConf config.Config) string {
 
       if deleteSuccess {
         fmt.Println("Horray! The index was deleted successfully. We're done here.")
-        fmt.Printf("Sleeping for %s seconds to wait for space to be freed up", myConf.SleepAfterDeleteIndex)
+        fmt.Printf("Sleeping for %s seconds to wait for space to be freed up", myConf.SleepAfterDeleteIndexSeconds)
 
         // Possibly expunge deleted indices here
         // curl -XPOST 'localhost:9200/_optimize?only_expunge_deletes=true'
 
-        time.Sleep(time.Duration(myConf.SleepAfterDeleteIndex) * time.Second)
+        time.Sleep(time.Duration(myConf.SleepAfterDeleteIndexSeconds) * time.Second)
       }
       // Wait some period of time for the disk usage to stabalize
       // Then continue to watch disk usage
 
       //fmt.Println("Sleeping...")
+    } else {
+      return fmt.Sprintf("Highest node disk usage of %%%v is not below the threshold of %%%v. Continuing to watch...", lowestNodeDiskPercent, myConf.MinFreeSpacePercent)
     }
+
     time.Sleep(time.Duration(myConf.SleepSeconds) * time.Second)
   }
 }

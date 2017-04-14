@@ -83,8 +83,17 @@ type ESSnapshot struct {
   EndTime string `json:"end_time"`
   EndTimeInMillis int `json:"end_time_in_millis"`
   DurationInMillis int `json:"duration_in_millis"`
-  Failures []string `json:"failures'`
+  Failures []ESFailure `json:"failures'`
   Shards ESSnapShards `json:"shards"`
+}
+
+type ESFailure struct {
+  Index string `json:"index"`
+  IndexUUID string `json:"index_uuid"`
+  ShardID int `json:"shard_id"`
+  Reason string `json:"reason"`
+  NodeID string `json:"node_id"`
+  Status string `json:"status"`
 }
 
 type ESSnapShards struct {
@@ -269,9 +278,16 @@ func GetSnapshotStatus(indexName string) string {
   } else {
     defer resp.Body.Close()
 
+    // When uncommented, this will break the JSON decoder due to resp.Body being at EOF
+    //body, _ := ioutil.ReadAll(resp.Body)
+    //fmt.Printf("Snapshot response body: %v\n", string(body))
+
     esResponse := ESResponse{}
     decoder := json.NewDecoder(resp.Body)
     err := decoder.Decode(&esResponse)
+
+    //esResponseJson, _ := json.Marshal(esResponse)
+    //fmt.Println("Snapshot Response json is: ", string(esResponseJson))
 
     var snapState string
 
@@ -279,8 +295,6 @@ func GetSnapshotStatus(indexName string) string {
       fmt.Println("Error parsing JSON response body for SnapshotStatus: ", err)
       return "Error while parsing JSON"
     } else {
-      //esResponseJson, _ := json.Marshal(esResponse)
-
       snapState = esResponse.Snapshots[0].State
       return snapState
     }

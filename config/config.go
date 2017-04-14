@@ -6,6 +6,7 @@ import (
   "encoding/json"
   "os"
   "fmt"
+  "log"
 )
 
 // Elasticsearch Configuration
@@ -13,13 +14,15 @@ type Config struct {
   ESHost string
   MinStorageBytes int
   SleepSeconds int
-  SleepAfterDeleteIndex int
+  SleepAfterMainLoopSeconds int
+  SleepAfterDeleteIndexSeconds int
   MinFreeSpacePercent float64
   SnapshotRepositoryName string
   MinIndexCount int
   SnapDryRun bool
   IndexDryRun bool
   IndexIncludePrefix []string
+  Logger log.Logger
 }
 
 func New(c string) Config {
@@ -52,6 +55,14 @@ func New(c string) Config {
 
   if config.SleepSeconds == 0 {
     config.SleepSeconds = 5
+  }
+
+  if config.SleepAfterDeleteIndexSeconds == 0 {
+    config.SleepAfterDeleteIndexSeconds = 60
+  }
+
+  if config.SleepAfterMainLoopSeconds == 0 {
+    config.SleepAfterMainLoopSeconds = 60
   }
 
   // Set defaults for MinIndexCount and DryRun here
