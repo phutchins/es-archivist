@@ -27,18 +27,17 @@ type Config struct {
 
 func New(c string) Config {
   configFileName := c
+  configFileDefaultDir := "/etc/esa/"
   config := Config{}
   var configFileFound bool
 
+  // Try current directory for config file first, then default dir
   if _, err := os.Stat(configFileName); err == nil {
     configFileFound = true
-    configFile, _ := os.Open(configFileName)
-    decoder := json.NewDecoder(configFile)
-    err := decoder.Decode(&config)
-
-    if err != nil {
-      fmt.Println("error decoding config file: ", err)
-    }
+    _, config = LoadConfigFile(configFileName)
+  } else if _, err := os.Stat(configFileDefaultDir + configFileName); err == nil {
+    configFileFound = true
+    _, config = LoadConfigFile(configFileDefaultDir + configFileName)
   }
 
   if configFileFound == false {
@@ -70,4 +69,23 @@ func New(c string) Config {
   //fmt.Println(config.ESHost)
 
   return config
+}
+
+func LoadConfigFile(f string) (string, Config) {
+  config := Config{}
+
+  fmt.Printf("Loading config from file %v\n", f)
+
+  configFile, _ := os.Open(f)
+  decoder := json.NewDecoder(configFile)
+  err := decoder.Decode(&config)
+
+  if err != nil {
+    fmt.Println("error decoding config file: ", err)
+    return fmt.Sprintf("Error decoding config file: ", err), config
+  }
+
+  fmt.Printf("Successfully loaded config file %v\n", f)
+
+  return "", config
 }

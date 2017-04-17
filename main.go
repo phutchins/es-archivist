@@ -41,7 +41,7 @@ func watchStorageSpace(myConf config.Config) string {
     var lowestNodeDiskPercent float64
 
     // Get current node stats
-    nodeStats := GetNodeStats()
+    nodeStats := GetNodeStats(myConf)
     //out, _ := json.Marshal(nodeStats)
     //fmt.Printf("nodeStats: %v", string(out))
 
@@ -84,7 +84,7 @@ func watchStorageSpace(myConf config.Config) string {
     //   of the oldest index
     if ( lowestNodeDiskPercent < myConf.MinFreeSpacePercent ) {
       var snapshotStatus string
-      indexList := GetIndexList()
+      indexList := GetIndexList(myConf)
       indexArray := GetIndexArray(indexList)
       filteredIndexArray := Filter(indexArray, ContainsPrefixFilter, myConf.IndexIncludePrefix)
       sortedIndexArray := SortIndexArray(filteredIndexArray)
@@ -125,7 +125,7 @@ func watchStorageSpace(myConf config.Config) string {
       //     if complete, continue on and delete the index
       moveAlong = false
       for moveAlong != true {
-        initialResponse := TakeSnapshot(oldestIndexName)
+        initialResponse := TakeSnapshot(myConf, oldestIndexName)
 
         if initialResponse == "accepted" {
           moveAlong = true
@@ -133,6 +133,9 @@ func watchStorageSpace(myConf config.Config) string {
         } else if initialResponse == "fail_name_in_use_exception" {
           // Check if the snapshot was successful
           fmt.Println("Failed to start snapshot: Snapshot name in use")
+          moveAlong = true
+        } else if initialResponse == "concurrent_snapshot_execution_exception" {
+          fmt.Println("Failed to start snapshot: Snapshot is already in progress")
           moveAlong = true
         } else {
           return fmt.Sprintf("Unhandled response from TakeSnapshot: %v\n", initialResponse)
@@ -150,7 +153,7 @@ func watchStorageSpace(myConf config.Config) string {
       // - ? FAIL ?
       moveAlong = false
       for moveAlong != true {
-        snapshotStatus = GetSnapshotStatus(oldestIndexName)
+        snapshotStatus = GetSnapshotStatus(myConf, oldestIndexName)
         fmt.Println("Snapshot status is: " + snapshotStatus)
 
 
@@ -167,7 +170,7 @@ func watchStorageSpace(myConf config.Config) string {
             return "snapdryrun"
           }
 
-          deleteSnapResult, err := DeleteSnapshot(oldestIndexName)
+          deleteSnapResult, err := DeleteSnapshot(myConf, oldestIndexName)
 
           fmt.Println("Deleting snapshot resulted in response: " + deleteSnapResult)
 
@@ -198,7 +201,7 @@ func watchStorageSpace(myConf config.Config) string {
         return "indexdryrun"
       }
 
-      deleteSuccess, err := DeleteIndex(oldestIndexName)
+      deleteSuccess, err := DeleteIndex(myConf, oldestIndexName)
 
       if err != nil {
         panic(err)

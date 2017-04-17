@@ -115,10 +115,8 @@ type RootCause struct {
 
 // Add a decode method on the struct that returns json given a new struct
 
-func GetIndexList() []IndexItem {
+func GetIndexList(myConfig config.Config) []IndexItem {
   indexList := []IndexItem{}
-
-  myConfig := config.New("config.json")
 
   protocol := "http://"
   httpPath := "/_cat/indices/*"
@@ -145,10 +143,8 @@ func GetIndexList() []IndexItem {
   return indexList
 }
 
-func GetNodeStats() NodeStats {
+func GetNodeStats(myConfig config.Config) NodeStats {
   nodeStats := NodeStats{}
-
-  myConfig := config.New("config.json")
 
   protocol := "http://"
   httpPath := "/_nodes/stats/fs"
@@ -182,8 +178,7 @@ func GetNodeStats() NodeStats {
   return nodeStats
 }
 
-func TakeSnapshot(indexName string) string {
-  myConfig := config.New("config.json")
+func TakeSnapshot(myConfig config.Config, indexName string) string {
 
   protocol := "http://"
   httpPath := "/_snapshot/" + myConfig.SnapshotRepositoryName + "/" + indexName
@@ -252,8 +247,10 @@ func TakeSnapshot(indexName string) string {
 
     } else if rNameAlreadyExists.MatchString(errorReason) {
       result = "fail_name_in_use_exception"
-      errorMessage := "Snapshot name is already in use"
-      fmt.Println("Fail: ", errorMessage)
+      //errorMessage := "Snapshot name is already in use"
+      //fmt.Println("Fail: ", errorMessage)
+    } else if errorString == "concurrent_snapshot_execution_exception" {
+      result = "concurrent_snapshot_execution_exception"
     } else {
       fmt.Printf("Status code [%v] - Unknown response: %v\n", statusCode, errorString)
       result = "fail"
@@ -263,9 +260,7 @@ func TakeSnapshot(indexName string) string {
   }
 }
 
-func GetSnapshotStatus(indexName string) string {
-  myConfig := config.New("config.json")
-
+func GetSnapshotStatus(myConfig config.Config, indexName string) string {
   protocol := "http://"
   httpPath := "/_snapshot/" + myConfig.SnapshotRepositoryName + "/" + indexName
   requestURI := protocol + myConfig.ESHost + httpPath
@@ -301,10 +296,9 @@ func GetSnapshotStatus(indexName string) string {
   }
 }
 
-func DeleteSnapshot(snapshotName string) (string, error) {
+func DeleteSnapshot(myConfig config.Config, snapshotName string) (string, error) {
   var deleteSnapResult string
   client := &http.Client{}
-  myConfig := config.New("config.json")
 
   protocol := "http://"
   httpPath := "/_snapshot/" + myConfig.SnapshotRepositoryName + "/" + snapshotName
@@ -336,11 +330,10 @@ func DeleteSnapshot(snapshotName string) (string, error) {
   return deleteSnapResult, nil
 }
 
-func DeleteIndex(indexName string) (bool, error) {
+func DeleteIndex(myConfig config.Config, indexName string) (bool, error) {
   deleteSuccess := false
 
   client := &http.Client{}
-  myConfig := config.New("config.json")
 
   protocol := "http://"
   httpPath := "/" + indexName
