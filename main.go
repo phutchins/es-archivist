@@ -59,7 +59,7 @@ func watchStorageSpace(myConf config.Config) string {
     for _, node := range nodeFSDataArray {
       // Calculate the percentage of storage space used
       percent := float64(node.Totals.FreeInBytes) / float64(node.Totals.TotalInBytes) * float64(100)
-      //ipct := int(percent / float64(1))
+      ipct := int(percent / float64(1))
 
       // Set lowestNodeDiskPercent with the percentage of the least disk space free
       if ( lowestNodeDiskPercent == 0 || percent < float64(lowestNodeDiskPercent) ) {
@@ -69,14 +69,12 @@ func watchStorageSpace(myConf config.Config) string {
       // We will probably want to determine the percentage from storage space alotted to
       // es so that we dont' continue deleting indices due to disk usage from some other
       // process or application. We could set this in our config here.
-      /*
       fmt.Printf("[%%%v] Node '%s' has %v free space left out of %v\n",
         ipct,
         node.Name,
         node.Totals.FreeInBytes,
         node.Totals.TotalInBytes,
       )
-      */
       //fmt.Printf("lowestNodeDiskPercent is [%%%v]\n", lowestNodeDiskPercent)
     }
 

@@ -5,7 +5,7 @@
   "SleepAfterDeleteIndex": 60,
   "MinFreeSpacePercent": 22,
   "SnapshotRepositoryName": "snaps",
-  "MinIndexCount": 4,
+  "MinIndexCount": 5,
   "SnapDryRun": false,
   "IndexDryRun": false,
   "IndexIncludePrefix": [

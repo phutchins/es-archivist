@@ -44,35 +44,31 @@ func New(c string) Config {
     fmt.Printf("No config file found at %s. Using defaults\n", configFileName)
   }
 
-  if config.ESHost == "" {
-    config.ESHost = "localhost:9200"
+  /* print config for debug
+  configJson, err:= json.Marshal(config)
+  if err != nil {
+    panic(err)
   }
 
-  if config.MinStorageBytes == 0 {
-    config.MinStorageBytes = 109951162777
-  }
-
-  if config.SleepSeconds == 0 {
-    config.SleepSeconds = 5
-  }
-
-  if config.SleepAfterDeleteIndexSeconds == 0 {
-    config.SleepAfterDeleteIndexSeconds = 60
-  }
-
-  if config.SleepAfterMainLoopSeconds == 0 {
-    config.SleepAfterMainLoopSeconds = 60
-  }
-
-  // Set defaults for MinIndexCount and DryRun here
-
-  //fmt.Println(config.ESHost)
+  fmt.Printf("Config: \n", string(configJson))
+  */
 
   return config
 }
 
 func LoadConfigFile(f string) (string, Config) {
   config := Config{}
+
+  // Set default values
+  config.ESHost = "localhost:9200"
+  config.MinStorageBytes = 109951162777
+  config.MinFreeSpacePercent = 22
+  config.SleepAfterDeleteIndexSeconds = 60
+  config.SleepSeconds = 5
+  config.SleepAfterMainLoopSeconds = 60
+  config.MinIndexCount = 30
+  config.IndexDryRun = true
+  config.SnapDryRun = true
 
   fmt.Printf("Loading config from file %v\n", f)
 
