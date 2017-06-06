@@ -82,10 +82,29 @@ func watchStorageSpace(myConf config.Config) string {
     //   of the oldest index
     if ( lowestNodeDiskPercent < myConf.MinFreeSpacePercent ) {
       var snapshotStatus string
+      var sortedIndexArray []string
+      var filteredIndexArray []string
+
       indexList := GetIndexList(myConf)
       indexArray := GetIndexArray(indexList)
-      filteredIndexArray := Filter(indexArray, ContainsPrefixFilter, myConf.IndexIncludePrefix)
-      sortedIndexArray := SortIndexArray(filteredIndexArray)
+
+      fmt.Printf("indexArray is %v\n", indexArray)
+
+      if len(indexArray) > 0 {
+        filteredIndexArray = Filter(indexArray, ContainsPrefixFilter, myConf.IndexIncludePrefix)
+      } else {
+        fmt.Println("Index list empty")
+      }
+
+      fmt.Printf("filteredIndexArray is %v\n", filteredIndexArray)
+      fmt.Printf("Length of filteredIndexArray is %v\n", len(filteredIndexArray))
+
+      if len(filteredIndexArray) > 0 {
+        sortedIndexArray = SortIndexArray(filteredIndexArray)
+      } else {
+        fmt.Println("No indices left after filtering...")
+      }
+
       indexCount := len(indexArray)
 
       //fmt.Printf("Total index count is %d\n", int(indexCount))
@@ -260,13 +279,16 @@ func (s ByLsTimeStamp) Less(i, j int) bool {
     log.Fatal(err)
   }
 
-  //fmt.Printf("s[i]: %v s[j]: %v\n", s[i], s[j])
-  //fmt.Println(rDate.FindStringSubmatch(s[i]))
+  fmt.Printf("s (should be array) is %v\n", s)
+  fmt.Printf("i is: %v, j is: %v\n", i, j)
+  fmt.Printf("s[i]: %v s[j]: %v\n", s[i], s[j])
+  fmt.Printf("iDate is: %v\n", rDate.FindStringSubmatch(s[i]))
+  fmt.Printf("jDate is: %v\n", rDate.FindStringSubmatch(s[j]))
 
   iDate := rDate.FindStringSubmatch(s[i])
   jDate := rDate.FindStringSubmatch(s[j])
 
-  //fmt.Printf("iDate: %s jDate: %s\n", iDate[1], jDate[1])
+  fmt.Printf("iDate: %s jDate: %s\n", iDate[1], jDate[1])
 
   // Remove period separator from date so that we can convert to int
   iDateString := rSep.ReplaceAllString(iDate[1], "")
@@ -306,7 +328,9 @@ func ContainsPrefixFilter(s string, p []string) bool {
 }
 
 func SortIndexArray(ia []string) []string {
-  sort.Sort(ByLsTimeStamp(ia))
+  if len(ia) > 0 {
+    sort.Sort(ByLsTimeStamp(ia))
+  }
 
   return ia
 }
