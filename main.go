@@ -88,7 +88,7 @@ func watchStorageSpace(myConf config.Config) string {
       indexList := GetIndexList(myConf)
       indexArray := GetIndexArray(indexList)
 
-      fmt.Printf("indexArray is %v\n", indexArray)
+      //fmt.Printf("indexArray is %v\n", indexArray)
 
       if len(indexArray) > 0 {
         filteredIndexArray = Filter(indexArray, ContainsPrefixFilter, myConf.IndexIncludePrefix)
@@ -96,8 +96,8 @@ func watchStorageSpace(myConf config.Config) string {
         fmt.Println("Index list empty")
       }
 
-      fmt.Printf("filteredIndexArray is %v\n", filteredIndexArray)
-      fmt.Printf("Length of filteredIndexArray is %v\n", len(filteredIndexArray))
+      //fmt.Printf("filteredIndexArray is %v\n", filteredIndexArray)
+      //fmt.Printf("Length of filteredIndexArray is %v\n", len(filteredIndexArray))
 
       if len(filteredIndexArray) > 0 {
         sortedIndexArray = SortIndexArray(filteredIndexArray)
@@ -279,16 +279,16 @@ func (s ByLsTimeStamp) Less(i, j int) bool {
     log.Fatal(err)
   }
 
-  fmt.Printf("s (should be array) is %v\n", s)
-  fmt.Printf("i is: %v, j is: %v\n", i, j)
-  fmt.Printf("s[i]: %v s[j]: %v\n", s[i], s[j])
-  fmt.Printf("iDate is: %v\n", rDate.FindStringSubmatch(s[i]))
-  fmt.Printf("jDate is: %v\n", rDate.FindStringSubmatch(s[j]))
+  //fmt.Printf("s (should be array) is %v\n", s)
+  //fmt.Printf("i is: %v, j is: %v\n", i, j)
+  //fmt.Printf("s[i]: %v s[j]: %v\n", s[i], s[j])
+  //fmt.Printf("iDate is: %v\n", rDate.FindStringSubmatch(s[i]))
+  //fmt.Printf("jDate is: %v\n", rDate.FindStringSubmatch(s[j]))
 
   iDate := rDate.FindStringSubmatch(s[i])
   jDate := rDate.FindStringSubmatch(s[j])
 
-  fmt.Printf("iDate: %s jDate: %s\n", iDate[1], jDate[1])
+  //fmt.Printf("iDate: %s jDate: %s\n", iDate[1], jDate[1])
 
   // Remove period separator from date so that we can convert to int
   iDateString := rSep.ReplaceAllString(iDate[1], "")
